@@ -12,6 +12,10 @@ import {
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { Link } from 'react-router-dom';
+import { publicRequest } from '../axios';
+import { setUser } from '../redux/reducers/auth';
+import { useDispatch } from 'react-redux'
+import { useNavigate } from "react-router-dom";
 
 
 const Login = () => {
@@ -21,6 +25,8 @@ const Login = () => {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [show, setShow] = useState(false)
+    const dispatch = useDispatch()
+    let navigate = useNavigate();
 
 
     const handleChange = (event) => {
@@ -29,9 +35,20 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+        try {
+            const res = await publicRequest.post('/auth/login', { email, password })
+            // console.log(res.data)
+            dispatch(setUser(res.data))
+            if (checked) {
+                localStorage.setItem("token", res.data.accessToken)
+            }
+            setError('')
+            navigate("/");
+        } catch (err) {
+            setError(err.response.data)
+        }
     }
-    
+
     return (
         <div>
             <div className='authForm'>
@@ -58,8 +75,8 @@ const Login = () => {
                                 <InputAdornment position="end">
                                     {
                                         show ?
-                                        <VisibilityIcon style={{cursor:'pointer'}} onClick={() => setShow(!show)} />:
-                                        <VisibilityOffIcon style={{cursor:'pointer'}} onClick={() => setShow(!show)} />
+                                            <VisibilityIcon style={{ cursor: 'pointer' }} onClick={() => setShow(!show)} /> :
+                                            <VisibilityOffIcon style={{ cursor: 'pointer' }} onClick={() => setShow(!show)} />
                                     }
                                 </InputAdornment>
                             ),
@@ -77,7 +94,7 @@ const Login = () => {
                     <Button className='btn' type='submit' variant="contained">Log In</Button>
                 </form>
             </div>
-            <p style={{color:'red',textAlign:'center'}}>{error}</p>
+            <p style={{ color: 'red', textAlign: 'center' }}>{error}</p>
         </div>
     )
 }
